@@ -4,4 +4,3 @@
 2. To do using Redux
 
 
-# React Redux 
