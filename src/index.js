@@ -1,49 +1,92 @@
-// redux에는 createStore 라는 함수가 있다 
-// store는 data를 넣을 수 있는 장소를 생성한다 
-// redux는 data를 관리하는데 도와주는 역할을 하기 위해 만들어졌다 
-import { createStore } from 'redux';
+import {createStore} from 'redux';
 
-// Vanilla without redux 
-const plus = document.querySelector("#add");
-const minus = document.querySelector("#minus");
-const span = document.querySelector("span");
+const form = document.querySelector("form");
+const input = document.querySelector("input");
+const ul = document.querySelector("ul");
 
-span.innerText = 0;
 
-const ADD = "ADD";
-const MINUS = "MINUS";
+const ADD_TODO = "ADD_TODO";
+const DELETE_TODO ="DELETE_TODO";
 
-const countModifier = (count = 0, action)=>{
-  console.log(count,action)
-  switch(action.type) {
-    case ADD: 
-      return count + 1;
-    case MINUS: 
-      return count - 1;
-    default:
-      return count
+const addToDo = (text)=>{
+  return {
+    type: ADD_TODO, 
+    text: text
   }
 }
 
-const store = createStore(countModifier);
+const deleteTodo = (id)=>{
+  return {
+    type: DELETE_TODO,
+    id: id
+  }
+}
 
-console.log(store)
-console.log(store.getState())
+const reducer = (state = [], action)=>{
+  console.log(...state)
+  switch(action.type){
+    case ADD_TODO:
+      // ...state  = state array unpack ,  state 어레이를 변경/바꾸는게 아니라 새로 어레이를 생성한다 
+      return [{ text : action.text, id: Date.now() }, ...state]
+    case DELETE_TODO:
+      // 새로운 어레이를 반환해야 하므로 filter를 사용한다 | 클릭한 항목의 아이디와 같이 않은 항목들로 반환 
+      return state.filter(item => item.id !== action.id);
+    default:
+      return state
+  }
+}
+
+const store = createStore(reducer);
 
 const onChange = ()=>{
-  span.innerText = store.getState();
-}
-store.subscribe(onChange)
-
-
-const handleAdd = ()=>{
-  // store.dispatch( {action}) action needs to be object  && action must have key:value 
-  store.dispatch({type:ADD})
+  console.log(store.getState())
 }
 
-const handleMinus = ()=>{
-  store.dispatch({type:MINUS})
+
+const dispatchAddToDo = (text)=>{
+  // store.dispatch({type: ADD_TODO, text: text})  이걸 함수로 쪼갬 
+  store.dispatch(addToDo(text));
 }
 
-plus.addEventListener("click", handleAdd);
-minus.addEventListener("click", handleMinus)
+const dispatchDeleteToDo = (e)=>{
+  const targetId = parseInt(e.currentTarget.parentElement.id); 
+  // store.dispatch({type:DELETE_TODO, id: targetId}); 이걸 쪼갬 
+  store.dispatch(deleteTodo(targetId))
+  
+}
+const paintToDos = ()=>{
+  // store.getState() 에 있는 어레이를 가져온다 
+  const toDos = store.getState();
+  // 새로운 toDos 어레이가 들어올 수 있도록 ul 을 초기화 시켜서  
+  ul.innerHTML = "";
+  toDos.forEach(toDo => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.innerText = "X";
+    btn.addEventListener("click", dispatchDeleteToDo)
+    li.id = toDo.id;
+    li.innerText = toDo.text;
+    li.appendChild(btn);
+    ul.appendChild(li);
+  })
+  // for(const item of toDos) {
+  //   const li = document.createElement("li");
+  //   li.id = item.id;
+  //   li.innerText = item.text;
+  //   ul.appendChild(li);
+  // }
+}
+
+store.subscribe(paintToDos);
+store.subscribe(onChange);
+
+
+
+function onSubmit(e){
+  e.preventDefault();
+  const toDo = input.value;
+  input.value = '';
+  dispatchAddToDo(toDo);
+}
+
+form.addEventListener("submit", onSubmit)
