@@ -1,7 +1,7 @@
 # Valilla Redux
 
-##count using Redux
-##To do using Redux
+1. count using Redux
+2. To do using Redux
 
 
 # React Redux 
